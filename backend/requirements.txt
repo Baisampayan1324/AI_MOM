@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-dotenv
+openai-whisper
+groq
+python-multipart
+websockets
+pyaudio
+torch
+numpy
+pydub
+ffmpeg-python
+psutil
