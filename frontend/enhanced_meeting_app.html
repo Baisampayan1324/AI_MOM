@@ -159,6 +159,37 @@
             transform: none !important;
         }
 
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 0.9em;
+            margin: 2px;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .audio-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .audio-player-container {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+            border: 1px solid #dee2e6;
+        }
+
         .status-card {
             padding: 20px;
             border-radius: var(--border-radius);
@@ -469,6 +500,33 @@
                     </button>
                 </div>
 
+                <!-- Audio Playback Section -->
+                <div id="audioPlaybackSection">
+                    <div class="section-title">
+                        🔊 Audio Playback
+                    </div>
+                    <div class="form-group">
+                        <label for="recordedAudioSelect">Select Recorded Audio</label>
+                        <select id="recordedAudioSelect" class="form-control">
+                            <option value="">No recorded audio available</option>
+                        </select>
+                    </div>
+                    <div class="audio-controls">
+                        <button type="button" id="loadAudioListBtn" class="btn btn-secondary btn-small">
+                            🔄 Refresh List
+                        </button>
+                        <button type="button" id="playAudioBtn" class="btn btn-primary btn-small" disabled>
+                            ▶️ Play Audio
+                        </button>
+                        <button type="button" id="downloadAudioBtn" class="btn btn-info btn-small" disabled>
+                            💾 Download
+                        </button>
+                    </div>
+                    <div id="audioPlayer" class="audio-player-container" style="display: none;">
+                        <audio id="audioElement" controls style="width: 100%; margin-top: 10px;"></audio>
+                    </div>
+                </div>
+
                 <!-- Performance Statistics -->
                 <div class="performance-stats">
                     <h4>📊 Performance Stats</h4>
@@ -622,6 +680,14 @@
                 this.fileUploadSection = document.getElementById('fileUploadSection');
                 this.realTimeSection = document.getElementById('realTimeSection');
                 this.transcriptionSection = document.getElementById('transcriptionSection');
+
+                // Audio playback elements
+                this.recordedAudioSelect = document.getElementById('recordedAudioSelect');
+                this.loadAudioListBtn = document.getElementById('loadAudioListBtn');
+                this.playAudioBtn = document.getElementById('playAudioBtn');
+                this.downloadAudioBtn = document.getElementById('downloadAudioBtn');
+                this.audioElement = document.getElementById('audioElement');
+                this.audioPlayer = document.getElementById('audioPlayer');
             }
 
             bindEvents() {
@@ -635,6 +701,12 @@
 
                 this.startRecordingBtn.addEventListener('click', () => this.startRecording());
                 this.stopRecordingBtn.addEventListener('click', () => this.stopRecording());
+
+                // Audio playback event handlers
+                this.loadAudioListBtn.addEventListener('click', () => this.loadAudioList());
+                this.playAudioBtn.addEventListener('click', () => this.playSelectedAudio());
+                this.downloadAudioBtn.addEventListener('click', () => this.downloadSelectedAudio());
+                this.recordedAudioSelect.addEventListener('change', () => this.onAudioSelectionChange());
 
                 // Auto-update session duration
                 setInterval(() => this.updateSessionDuration(), 1000);
@@ -1063,6 +1135,107 @@
                 const div = document.createElement('div');
                 div.textContent = text;
                 return div.innerHTML;
+            }
+
+            // Audio Playback Methods
+            async loadAudioList() {
+                try {
+                    this.loadAudioListBtn.disabled = true;
+                    this.loadAudioListBtn.textContent = '⏳ Loading...';
+
+                    const response = await fetch('http://localhost:8000/api/list-saved-audio');
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    this.populateAudioList(data.audio_files || []);
+                    
+                    this.showStatus('success', `✅ Found ${data.audio_files?.length || 0} audio files`);
+                } catch (error) {
+                    console.error('Failed to load audio list:', error);
+                    this.showStatus('error', `❌ Failed to load audio list: ${error.message}`);
+                } finally {
+                    this.loadAudioListBtn.disabled = false;
+                    this.loadAudioListBtn.textContent = '🔄 Refresh List';
+                }
+            }
+
+            populateAudioList(audioFiles) {
+                this.recordedAudioSelect.innerHTML = '<option value="">Select an audio file...</option>';
+                
+                if (audioFiles.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No recorded audio available';
+                    this.recordedAudioSelect.appendChild(option);
+                    return;
+                }
+
+                audioFiles.forEach(file => {
+                    const option = document.createElement('option');
+                    option.value = file.filename;
+                    option.textContent = `${file.display_name} (${file.size})`;
+                    this.recordedAudioSelect.appendChild(option);
+                });
+            }
+
+            onAudioSelectionChange() {
+                const hasSelection = this.recordedAudioSelect.value !== '';
+                this.playAudioBtn.disabled = !hasSelection;
+                this.downloadAudioBtn.disabled = !hasSelection;
+                
+                if (!hasSelection) {
+                    this.audioPlayer.style.display = 'none';
+                }
+            }
+
+            async playSelectedAudio() {
+                const selectedFile = this.recordedAudioSelect.value;
+                if (!selectedFile) return;
+
+                try {
+                    this.playAudioBtn.disabled = true;
+                    this.playAudioBtn.textContent = '⏳ Loading...';
+
+                    // Construct the audio URL
+                    const audioUrl = `http://localhost:8000/api/audio/${encodeURIComponent(selectedFile)}`;
+                    
+                    // Set the audio source and show player
+                    this.audioElement.src = audioUrl;
+                    this.audioPlayer.style.display = 'block';
+                    
+                    // Auto-play the audio
+                    await this.audioElement.play();
+                    
+                    this.showStatus('success', `🔊 Playing: ${selectedFile}`);
+                } catch (error) {
+                    console.error('Failed to play audio:', error);
+                    this.showStatus('error', `❌ Failed to play audio: ${error.message}`);
+                } finally {
+                    this.playAudioBtn.disabled = false;
+                    this.playAudioBtn.textContent = '▶️ Play Audio';
+                }
+            }
+
+            downloadSelectedAudio() {
+                const selectedFile = this.recordedAudioSelect.value;
+                if (!selectedFile) return;
+
+                try {
+                    const downloadUrl = `http://localhost:8000/api/audio/${encodeURIComponent(selectedFile)}`;
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = selectedFile;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    
+                    this.showStatus('success', `💾 Downloading: ${selectedFile}`);
+                } catch (error) {
+                    console.error('Failed to download audio:', error);
+                    this.showStatus('error', `❌ Failed to download audio: ${error.message}`);
+                }
             }
         }
 

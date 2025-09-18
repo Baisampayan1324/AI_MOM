@@ -1,0 +1,552 @@
+/* Modern transcription overlay styles */
+.transcription-overlay {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    width: 400px;
+    min-height: 300px;
+    max-height: 600px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.transcription-overlay.minimized {
+    height: 60px;
+    min-height: 60px;
+}
+
+.transcription-overlay.minimized .transcription-content {
+    display: none;
+}
+
+.transcription-header {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 12px 16px;
+    border-radius: 16px 16px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: move;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.transcription-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.transcription-icon {
+    font-size: 16px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.transcription-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.control-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 8px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.control-icon {
+    color: white;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.transcription-content {
+    flex: 1;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+}
+
+.transcription-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    font-size: 12px;
+    color: white;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    animation: statusPulse 1.5s infinite;
+}
+
+.status-indicator.inactive {
+    background: #6b7280;
+    animation: none;
+}
+
+.status-indicator.connecting {
+    background: #f59e0b;
+}
+
+.status-indicator.active {
+    background: #10b981;
+}
+
+.status-indicator.paused {
+    background: #f97316;
+    animation: none;
+}
+
+.status-indicator.error {
+    background: #ef4444;
+}
+
+.status-indicator.processing {
+    background: #3b82f6;
+}
+
+@keyframes statusPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.transcription-text-container {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    padding: 12px;
+    overflow-y: auto;
+    max-height: 200px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.transcription-text {
+    color: #374151;
+    font-size: 13px;
+    line-height: 1.5;
+    height: 100%;
+}
+
+.transcription-entry {
+    margin-bottom: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.02);
+    border-left: 3px solid #667eea;
+    animation: slideIn 0.3s ease;
+}
+
+.transcription-entry.youtube-entry {
+    border-left-color: #ff0000;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.transcription-time {
+    color: #6b7280;
+    font-size: 11px;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.transcription-content {
+    color: #111827;
+    word-wrap: break-word;
+}
+
+.transcription-summary {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.summary-header {
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.summary-toggle {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 12px;
+    transition: transform 0.2s ease;
+}
+
+.summary-toggle:hover {
+    transform: scale(1.2);
+}
+
+.summary-content {
+    padding: 12px;
+    color: white;
+    font-size: 12px;
+    display: block;
+}
+
+.key-points h4,
+.action-items h4 {
+    margin: 0 0 8px 0;
+    font-size: 12px;
+    color: #fbbf24;
+    font-weight: 600;
+}
+
+.key-point,
+.action-item {
+    margin-bottom: 4px;
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    line-height: 1.4;
+}
+
+.transcription-resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    cursor: se-resize;
+    background: linear-gradient(-45deg, transparent 0%, transparent 40%, rgba(255, 255, 255, 0.3) 50%, transparent 60%, transparent 100%);
+    border-radius: 0 0 16px 0;
+}
+
+/* Notification styles */
+.auto-start-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    z-index: 10001;
+    animation: notificationSlide 0.3s ease;
+    max-width: 350px;
+}
+
+.auto-start-notification.zoom-notification {
+    background: linear-gradient(135deg, #2d8cff 0%, #0066cc 100%);
+}
+
+.auto-start-notification.youtube-notification {
+    background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+}
+
+@keyframes notificationSlide {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.notification-icon {
+    font-size: 20px;
+    animation: pulse 2s infinite;
+}
+
+.notification-text {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    min-width: 180px;
+}
+
+.notification-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.notification-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.notification-btn.yes {
+    background: rgba(16, 185, 129, 0.8);
+    border-color: rgba(16, 185, 129, 1);
+}
+
+.notification-btn.no {
+    background: rgba(239, 68, 68, 0.8);
+    border-color: rgba(239, 68, 68, 1);
+}
+
+/* General notification for errors, warnings, etc. */
+.transcription-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10001;
+    animation: notificationSlide 0.3s ease;
+    max-width: 300px;
+}
+
+.transcription-notification.info {
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+}
+
+.transcription-notification.error {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.transcription-notification.warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.transcription-notification.success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .transcription-overlay {
+        width: 320px;
+        max-height: 400px;
+    }
+    
+    .auto-start-notification {
+        max-width: 280px;
+        font-size: 13px;
+    }
+    
+    .notification-content {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .notification-text {
+        min-width: auto;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .transcription-text-container {
+        background: rgba(31, 41, 55, 0.95);
+        color: #e5e7eb;
+    }
+    
+    .transcription-text {
+        color: #e5e7eb;
+    }
+    
+    .transcription-entry {
+        background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .transcription-content {
+        color: #f3f4f6;
+    }
+}
+
+/* Platform-specific adjustments */
+.transcription-overlay[data-platform="google-meet"] {
+    background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+}
+
+.transcription-overlay[data-platform="zoom"] {
+    background: linear-gradient(135deg, #2d8cff 0%, #0066cc 100%);
+}
+
+.transcription-overlay[data-platform="youtube"] {
+    background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+}
+
+/* Accessibility improvements */
+.transcription-overlay:focus-within {
+    outline: 2px solid #fbbf24;
+    outline-offset: 2px;
+}
+
+.control-btn:focus,
+.notification-btn:focus,
+.summary-toggle:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.6);
+    outline-offset: 1px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .transcription-overlay {
+        border: 2px solid #ffffff;
+    }
+    
+    .transcription-text-container {
+        border: 1px solid #000000;
+    }
+    
+    .control-btn,
+    .notification-btn {
+        border: 1px solid #ffffff;
+    }
+}
+
+/* Audio capture notification styles */
+.microphone-notification,
+.audio-capture-guidance {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.notification-content,
+.guidance-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.notification-icon,
+.guidance-icon {
+    font-size: 24px;
+    margin-top: 5px;
+}
+
+.notification-text,
+.guidance-text {
+    flex: 1;
+}
+
+.notification-text strong,
+.guidance-text h3 {
+    display: block;
+    margin-bottom: 8px;
+    color: #4CAF50;
+    font-size: 16px;
+}
+
+.notification-text p,
+.guidance-text p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.guidance-text ol {
+    margin: 10px 0;
+    padding-left: 20px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+}
+
+.guidance-text li {
+    margin-bottom: 5px;
+}
+
+.notification-btn,
+.guidance-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin-top: 10px;
+}
+
+.notification-btn:hover,
+.guidance-btn:hover {
+    background: #45a049;
+    transform: translateY(-1px);
+}
+
+.guidance-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.guidance-btn.primary {
+    background: #4CAF50;
+}
+
+.guidance-btn:not(.primary) {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.guidance-btn:not(.primary):hover {
+    background: rgba(255, 255, 255, 0.3);
+}

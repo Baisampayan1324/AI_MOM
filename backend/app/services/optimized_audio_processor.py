@@ -235,10 +235,12 @@ class OptimizedAudioProcessor:
         Transcribe a real-time audio chunk with optimized processing.
         """
         start_time = time.time()
+        logger.info(f"🔄 Starting transcription of audio chunk. Size: {len(audio_chunk)} bytes, Language: {language}")
         
         # Enhanced rate limiting
         current_time = time.time()
         if current_time - self.last_process_time < self.min_interval:
+            logger.info("🔄 Skipping chunk - rate limited")
             return {
                 "text": "",
                 "language": language or "en",
@@ -273,6 +275,9 @@ class OptimizedAudioProcessor:
             
         except Exception as e:
             logger.error(f"Chunk transcription failed: {e}")
+            # Log full traceback for debugging
+            import traceback
+            logger.error(f"Full traceback for chunk transcription error: {traceback.format_exc()}")
             return {
                 "text": "",
                 "language": language or "en", 
@@ -283,6 +288,12 @@ class OptimizedAudioProcessor:
     
     def _transcribe_chunk_optimized(self, audio_array: np.ndarray, language: Optional[str] = None) -> dict:
         """Optimized chunk transcription with dynamic settings."""
+        # Force English language for all transcriptions
+        if language is None or language == 'auto':
+            language = 'en'
+            
+        logger.info(f"🔄 Transcribing chunk with language: {language}, Audio array shape: {audio_array.shape}")
+        
         options = {
             "language": language,
             "fp16": self.use_fp16,
@@ -573,10 +584,27 @@ class OptimizedAudioProcessor:
     def _extract_raw_pcm(self, data: bytes) -> Optional[np.ndarray]:
         """Extract audio from raw PCM data."""
         try:
+            logger.info(f"Attempting to extract raw PCM data. Data size: {len(data)} bytes")
+            
+            # Validate data size
+            if len(data) == 0:
+                logger.warning("Received empty audio data")
+                return None
+                
+            # Ensure data size is even (16-bit samples)
+            if len(data) % 2 != 0:
+                logger.warning("Audio data size is not even, truncating last byte")
+                data = data[:-1]
+                
             # Try 16-bit PCM first
             audio_array = np.frombuffer(data, dtype=np.int16).astype(np.float32) / 32768.0
+            logger.info(f"Successfully extracted PCM data. Array shape: {audio_array.shape}")
             return audio_array
-        except:
+        except Exception as e:
+            logger.error(f"Failed to extract raw PCM data: {e}")
+            # Log first few bytes for debugging
+            if data:
+                logger.error(f"First 20 bytes of data: {data[:20]}")
             return None
     
     def _extract_audio_from_webm(self, webm_data: bytes) -> Optional[np.ndarray]:

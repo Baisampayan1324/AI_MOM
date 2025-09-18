@@ -257,7 +257,10 @@ class MeetingLogger:
         self.logger.error(f"   💥 Message: {error_message}")
         
         if context:
-            self.logger.error(f"   📋 Context: {json.dumps(context, indent=2)}")
+            try:
+                self.logger.error(f"   📋 Context: {json.dumps(context, indent=2, default=str)}")
+            except Exception as json_error:
+                self.logger.error(f"   📋 Context: {str(context)} (JSON serialization failed: {json_error})")
         
         # Add to event buffer
         self.add_event("error", {
@@ -365,10 +368,20 @@ class MeetingLogger:
     def add_event(self, event_type: str, event_data: Dict[str, Any]):
         """Add event to buffer for real-time monitoring."""
         with self.buffer_lock:
+            # Convert datetime objects to ISO format strings to avoid JSON serialization issues
+            def serialize_datetime(obj):
+                if isinstance(obj, datetime):
+                    return obj.isoformat()
+                elif isinstance(obj, dict):
+                    return {k: serialize_datetime(v) for k, v in obj.items()}
+                elif isinstance(obj, list):
+                    return [serialize_datetime(item) for item in obj]
+                return obj
+            
             event = {
                 "timestamp": datetime.now().isoformat(),
                 "type": event_type,
-                "data": event_data
+                "data": serialize_datetime(event_data)
             }
             self.event_buffer.append(event)
     

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Meeting Transcription</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="popup-container">
+        <header class="popup-header">
+            <div class="logo">
+                <span class="logo-icon">🎤</span>
+                <h1>AI Meeting Transcription</h1>
+            </div>
+            <div class="status-indicator">
+                <span id="connection-status" class="status-dot offline"></span>
+                <span id="status-text">Offline</span>
+            </div>
+        </header>
+
+        <main class="popup-main">
+            <!-- Screen Capture Section -->
+            <section class="capture-section">
+                <h2>🖥️ Screen Capture Mode</h2>
+                <p class="section-description">Capture audio from any meeting, video, or application</p>
+                
+                <div class="capture-controls">
+                    <button id="start-screen-capture" class="primary-btn" disabled>
+                        <span class="btn-icon">🎬</span>
+                        Start Screen Capture
+                    </button>
+                    <button id="stop-screen-capture" class="danger-btn" style="display: none;">
+                        <span class="btn-icon">⏹️</span>
+                        Stop Capture
+                    </button>
+                </div>
+                
+                <div class="capture-info" id="capture-info" style="display: none;">
+                    <div class="info-item">
+                        <span class="info-label">Status:</span>
+                        <span id="capture-status" class="info-value">Ready</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Duration:</span>
+                        <span id="capture-duration" class="info-value">00:00</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Words:</span>
+                        <span id="word-count" class="info-value">0</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Platform Detection Section -->
+            <section class="platform-section">
+                <h2>🌐 Platform Detection</h2>
+                <div class="platform-status">
+                    <div class="platform-item current-site">
+                        <span class="platform-icon">🖥️</span>
+                        <span class="platform-name">Current Site</span>
+                        <span id="current-site-status" class="platform-status-text">Checking...</span>
+                    </div>
+                    <div class="platform-item">
+                        <span class="platform-icon">📹</span>
+                        <span class="platform-name">Google Meet</span>
+                        <span id="meet-status" class="platform-status-text">Not detected</span>
+                    </div>
+                    <div class="platform-item">
+                        <span class="platform-icon">💼</span>
+                        <span class="platform-name">Zoom</span>
+                        <span id="zoom-status" class="platform-status-text">Not detected</span>
+                    </div>
+                    <div class="platform-item">
+                        <span class="platform-icon">📺</span>
+                        <span class="platform-name">YouTube</span>
+                        <span id="youtube-status" class="platform-status-text">Not detected</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section class="settings-section">
+                <h2>⚙️ Settings</h2>
+                <div class="setting-item">
+                    <label for="backend-url">Backend URL:</label>
+                    <input type="text" id="backend-url" value="http://localhost:8000" placeholder="http://localhost:8000">
+                </div>
+                <div class="setting-item">
+                    <label for="language-select">Language:</label>
+                    <select id="language-select">
+                        <option value="auto">Auto-detect</option>
+                        <option value="en">English</option>
+                        <option value="es">Spanish</option>
+                        <option value="fr">French</option>
+                        <option value="de">German</option>
+                        <option value="zh">Chinese</option>
+                        <option value="ja">Japanese</option>
+                        <option value="hi">Hindi</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="show-overlay" checked>
+                        <span class="checkbox-custom"></span>
+                        Show transcription overlay
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="auto-summary" checked>
+                        <span class="checkbox-custom"></span>
+                        Generate smart summaries
+                    </label>
+                </div>
+            </section>
+
+            <!-- Actions Section -->
+            <section class="actions-section">
+                <div class="action-buttons">
+                    <button id="test-connection" class="secondary-btn">
+                        <span class="btn-icon">🔗</span>
+                        Test Connection
+                    </button>
+                    <button id="export-transcript" class="secondary-btn" disabled>
+                        <span class="btn-icon">💾</span>
+                        Export Transcript
+                    </button>
+                    <button id="clear-data" class="secondary-btn">
+                        <span class="btn-icon">🗑️</span>
+                        Clear Data
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <footer class="popup-footer">
+            <div class="footer-info">
+                <span class="version">v1.0.0</span>
+                <span class="separator">|</span>
+                <span id="performance-info">Ready</span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

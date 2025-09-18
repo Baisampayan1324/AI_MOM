@@ -1,0 +1,39 @@
+<!-- SVG icon for Meeting Transcription Extension -->
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with gradient -->
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f093fb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f5576c;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main background circle -->
+  <circle cx="64" cy="64" r="60" fill="url(#grad1)" stroke="#ffffff" stroke-width="4"/>
+  
+  <!-- Microphone body -->
+  <rect x="52" y="35" width="24" height="35" rx="12" ry="12" fill="#ffffff"/>
+  
+  <!-- Microphone stand -->
+  <rect x="61" y="70" width="6" height="20" fill="#ffffff"/>
+  
+  <!-- Base -->
+  <rect x="48" y="90" width="32" height="4" rx="2" ry="2" fill="#ffffff"/>
+  
+  <!-- Sound waves -->
+  <path d="M 35 50 Q 30 55 35 60" stroke="#ffffff" stroke-width="3" fill="none" opacity="0.8"/>
+  <path d="M 30 45 Q 22 55 30 65" stroke="#ffffff" stroke-width="2" fill="none" opacity="0.6"/>
+  <path d="M 93 50 Q 98 55 93 60" stroke="#ffffff" stroke-width="3" fill="none" opacity="0.8"/>
+  <path d="M 98 45 Q 106 55 98 65" stroke="#ffffff" stroke-width="2" fill="none" opacity="0.6"/>
+  
+  <!-- AI indicator dots -->
+  <circle cx="45" cy="25" r="3" fill="url(#grad2)" opacity="0.9"/>
+  <circle cx="55" cy="20" r="2" fill="url(#grad2)" opacity="0.7"/>
+  <circle cx="65" cy="22" r="2.5" fill="url(#grad2)" opacity="0.8"/>
+  <circle cx="75" cy="18" r="2" fill="url(#grad2)" opacity="0.6"/>
+  <circle cx="83" cy="25" r="3" fill="url(#grad2)" opacity="0.9"/>
+</svg>

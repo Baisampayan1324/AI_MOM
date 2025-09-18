@@ -7,6 +7,7 @@
     "permissions": [
         "activeTab",
         "tabCapture",
+        "desktopCapture",
         "storage",
         "scripting"
     ],
@@ -15,7 +16,9 @@
         "https://meet.google.com/*",
         "https://*.zoom.us/*", 
         "https://www.youtube.com/*",
-        "http://localhost:8000/*"
+        "http://localhost:8000/*",
+        "https://*/*",
+        "http://*/*"
     ],
     
     "background": {
@@ -25,21 +28,32 @@
     "content_scripts": [
         {
             "matches": ["https://meet.google.com/*"],
-            "js": ["content/common.js", "content/google-meet.js"],
+            "js": ["content/common.js", "content/screen-capture.js", "content/google-meet.js"],
             "css": ["overlay/overlay.css"],
             "run_at": "document_idle"
         },
         {
             "matches": ["https://*.zoom.us/*"],
-            "js": ["content/common.js", "content/zoom.js"], 
+            "js": ["content/common.js", "content/screen-capture.js", "content/zoom.js"], 
             "css": ["overlay/overlay.css"],
             "run_at": "document_idle"
         },
         {
             "matches": ["https://www.youtube.com/*"],
-            "js": ["content/common.js", "content/youtube.js"],
+            "js": ["content/common.js", "content/screen-capture.js", "content/youtube.js"],
             "css": ["overlay/overlay.css"],
             "run_at": "document_idle"
+        },
+        {
+            "matches": ["https://*/*", "http://*/*"],
+            "js": ["content/screen-capture.js"],
+            "css": ["overlay/overlay.css"],
+            "run_at": "document_idle",
+            "exclude_matches": [
+                "https://meet.google.com/*",
+                "https://*.zoom.us/*",
+                "https://www.youtube.com/*"
+            ]
         }
     ],
     
@@ -48,7 +62,6 @@
         "default_title": "Meeting Transcription",
         "default_icon": {
             "16": "assets/icons/icon16.png",
-            "32": "assets/icons/icon32.png",
             "48": "assets/icons/icon48.png",
             "128": "assets/icons/icon128.png"
         }
@@ -56,7 +69,6 @@
     
     "icons": {
         "16": "assets/icons/icon16.png",
-        "32": "assets/icons/icon32.png",
         "48": "assets/icons/icon48.png",
         "128": "assets/icons/icon128.png"
     },
@@ -66,11 +78,9 @@
             "resources": [
                 "overlay/*",
                 "assets/*",
-                "utils/*"
+                "content/*"
             ],
             "matches": ["<all_urls>"]
         }
-    ],
-    
-    "options_page": "popup/options.html"
+    ]
 }

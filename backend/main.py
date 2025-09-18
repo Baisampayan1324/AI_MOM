@@ -14,5 +14,8 @@ if __name__ == "__main__":
         host=host,
         port=port,
         reload=True,  # Enable auto-reload during development
-        log_level="info"
+        log_level="info",
+        ws="websockets",  # Explicitly specify WebSocket implementation
+        ws_ping_interval=20,  # Ping interval in seconds
+        ws_ping_timeout=20,   # Ping timeout in seconds
     )

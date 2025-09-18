@@ -1,5 +1,7 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, WebSocket
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, WebSocket, Request
+from fastapi.responses import JSONResponse, FileResponse
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 import os
 import tempfile
 import uuid
@@ -14,6 +16,9 @@ from app.services.summarizer import Summarizer
 from app.services.user_profile import UserProfileService
 from app.services.meeting_logger import meeting_logger
 from app.api.websocket import manager
+
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address)
 
 # Initialize services with optimizations
 try:
@@ -31,7 +36,8 @@ user_profile_service = UserProfileService()
 router = APIRouter()
 
 @router.post("/start-meeting-session")
-async def start_meeting_session(meeting_id: str = Form(...), participants: str = Form(None)):
+@limiter.limit("50/minute")
+async def start_meeting_session(request: Request, meeting_id: str = Form(...), participants: str = Form(None)):
     """
     Start a new meeting session with logging.
     
@@ -69,7 +75,8 @@ async def start_meeting_session(meeting_id: str = Form(...), participants: str =
         raise HTTPException(status_code=500, detail=f"Failed to start meeting session: {str(e)}")
 
 @router.post("/end-meeting-session")
-async def end_meeting_session(meeting_id: str = Form(...)):
+@limiter.limit("50/minute")
+async def end_meeting_session(request: Request, meeting_id: str = Form(...)):
     """
     End a meeting session and generate summary report.
     
@@ -167,7 +174,8 @@ async def get_system_performance():
         raise HTTPException(status_code=500, detail=f"Failed to get system performance: {str(e)}")
 
 @router.post("/transcribe", response_model=TranscriptionResponse)
-async def transcribe_audio_file(file: UploadFile = File(...), language: str = Form(None)):
+@limiter.limit("10/minute")
+async def transcribe_audio_file(request: Request, file: UploadFile = File(...), language: str = Form(None)):
     """
     Transcribe an uploaded audio file.
     
@@ -201,7 +209,8 @@ async def transcribe_audio_file(file: UploadFile = File(...), language: str = Fo
         raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
 
 @router.post("/summarize", response_model=SummaryResponse)
-async def summarize_text(request: SummaryRequest):
+@limiter.limit("20/minute")
+async def summarize_text(request: Request, request_data: SummaryRequest):
     """
     Summarize text and extract key points using Groq.
     
@@ -334,19 +343,28 @@ processing_chunks = set()
 meeting_transcripts = {}
 
 @router.post("/process-audio-chunk")
-async def process_audio_chunk(chunk: UploadFile = File(...), meeting_id: str = Form(...), language: str = Form(None)):
+@limiter.limit("30/minute")
+async def process_audio_chunk(request: Request, chunk: UploadFile = File(...), meeting_id: str = Form(...), language: str = Form(None)):
     """
     Process a real-time audio chunk with enhanced logging and optimization.
     
     Args:
         chunk: Audio chunk to process
         meeting_id: ID of the meeting
-        language: Language of the audio (optional)
+        language: Language of the audio (optional, defaults to English)
         
     Returns:
         Transcription result for the chunk
     """
+    # Force English language for all transcriptions
+    language = "en"
+    
     chunk_id = f"{meeting_id}_{hash(chunk.filename) % 10000}" if chunk.filename else meeting_id
+    
+    # Log information about the received chunk
+    meeting_logger.logger.info(f"📥 Received audio chunk for meeting {meeting_id} (ID: {chunk_id})")
+    meeting_logger.logger.info(f"📄 Chunk filename: {chunk.filename}")
+    meeting_logger.logger.info(f"📦 Chunk content type: {chunk.content_type}")
     
     # Simple rate limiting to prevent overwhelming the system
     if chunk_id in processing_chunks:
@@ -365,6 +383,12 @@ async def process_audio_chunk(chunk: UploadFile = File(...), meeting_id: str = F
         
         # Read the audio chunk
         audio_data = await chunk.read()
+        meeting_logger.logger.info(f"📏 Audio data size: {len(audio_data)} bytes")
+        
+        # Log first few bytes for debugging
+        if len(audio_data) > 0:
+            meeting_logger.logger.info(f"🔍 First 20 bytes of audio data: {audio_data[:20]}")
+        
         chunk_info = {
             "chunk_id": chunk_id,
             "size_bytes": len(audio_data),
@@ -385,14 +409,27 @@ async def process_audio_chunk(chunk: UploadFile = File(...), meeting_id: str = F
         
         # Process the audio chunk with optimized processor
         start_time = time.time()
-        result = audio_processor.transcribe_chunk(audio_data, language)
+        try:
+            result = audio_processor.transcribe_chunk(audio_data, language)
+            meeting_logger.logger.info(f"✅ Audio chunk transcription completed successfully")
+        except Exception as e:
+            meeting_logger.logger.error(f"❌ Audio processor failed: {e}")
+            import traceback
+            meeting_logger.logger.error(f"Full traceback: {traceback.format_exc()}")
+            raise
         processing_time = time.time() - start_time
         
         # Add processing time to result
         result["processing_time"] = round(processing_time, 3)
         
-        # Log transcription result
+        # Log transcription result with actual text
         meeting_logger.log_transcription_result(meeting_id, result)
+        
+        # ENHANCED LOGGING: Show actual transcribed text in logs
+        if result["text"].strip():
+            meeting_logger.logger.info(f"💬 TRANSCRIPT: \"{result['text']}\" (Language: {result.get('language', 'unknown')})")
+        else:
+            meeting_logger.logger.info(f"🔇 No speech detected in audio chunk")
         
         # If we have meaningful transcription, broadcast it
         if result["text"].strip():
@@ -431,6 +468,9 @@ async def process_audio_chunk(chunk: UploadFile = File(...), meeting_id: str = F
             "chunk_id": chunk_id,
             "chunk_size": len(audio_data) if 'audio_data' in locals() else 0
         })
+        # Log the full traceback for debugging
+        import traceback
+        meeting_logger.logger.error(f"Full traceback for chunk processing error: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Chunk processing failed: {str(e)}")
     finally:
         # Remove from processing set
@@ -565,3 +605,108 @@ def check_for_speaker_alerts(text: str, meeting_id: str):
         # Broadcast the alert
         print(f"Broadcasting speaker alert: {alert_message}")
         asyncio.create_task(manager.broadcast(meeting_id, alert_message))
+
+@router.get("/list-saved-audio")
+async def list_saved_audio():
+    """
+    List all saved audio files with metadata.
+    
+    Returns:
+        List of audio files with their information
+    """
+    try:
+        # Define the directory where audio files are stored
+        audio_dir = os.path.join(os.path.dirname(__file__), "..", "..", "saved_audio")
+        
+        # Create directory if it doesn't exist
+        os.makedirs(audio_dir, exist_ok=True)
+        
+        audio_files = []
+        
+        # Scan for audio files
+        for filename in os.listdir(audio_dir):
+            if filename.lower().endswith(('.mp3', '.wav', '.m4a', '.ogg', '.flac')):
+                file_path = os.path.join(audio_dir, filename)
+                if os.path.isfile(file_path):
+                    # Get file metadata
+                    stat = os.stat(file_path)
+                    file_size = stat.st_size
+                    modified_time = stat.st_mtime
+                    
+                    # Format file size
+                    if file_size < 1024:
+                        size_str = f"{file_size} B"
+                    elif file_size < 1024 * 1024:
+                        size_str = f"{file_size / 1024:.1f} KB"
+                    else:
+                        size_str = f"{file_size / (1024 * 1024):.1f} MB"
+                    
+                    # Create display name
+                    display_name = filename.replace('_', ' ').replace('.mp3', '').replace('.wav', '')
+                    
+                    audio_files.append({
+                        "filename": filename,
+                        "display_name": display_name,
+                        "size": size_str,
+                        "size_bytes": file_size,
+                        "modified_time": modified_time
+                    })
+        
+        # Sort by modification time (newest first)
+        audio_files.sort(key=lambda x: x['modified_time'], reverse=True)
+        
+        return JSONResponse(content={
+            "status": "success",
+            "audio_files": audio_files,
+            "count": len(audio_files)
+        })
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to list audio files: {str(e)}")
+
+@router.get("/audio/{filename}")
+async def serve_audio_file(filename: str):
+    """
+    Serve an audio file for playback or download.
+    
+    Args:
+        filename: Name of the audio file to serve
+        
+    Returns:
+        Audio file response
+    """
+    try:
+        # Define the directory where audio files are stored
+        audio_dir = os.path.join(os.path.dirname(__file__), "..", "..", "saved_audio")
+        file_path = os.path.join(audio_dir, filename)
+        
+        # Security check - ensure the file is in the audio directory
+        if not os.path.commonpath([audio_dir, file_path]) == audio_dir:
+            raise HTTPException(status_code=400, detail="Invalid file path")
+        
+        # Check if file exists
+        if not os.path.isfile(file_path):
+            raise HTTPException(status_code=404, detail="Audio file not found")
+        
+        # Determine media type based on file extension
+        media_type_map = {
+            '.mp3': 'audio/mpeg',
+            '.wav': 'audio/wav',
+            '.m4a': 'audio/mp4',
+            '.ogg': 'audio/ogg',
+            '.flac': 'audio/flac'
+        }
+        
+        file_ext = os.path.splitext(filename)[1].lower()
+        media_type = media_type_map.get(file_ext, 'application/octet-stream')
+        
+        return FileResponse(
+            path=file_path,
+            media_type=media_type,
+            filename=filename
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to serve audio file: {str(e)}")
